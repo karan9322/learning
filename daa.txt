@@ -1,0 +1,331 @@
+#include <iostream>
+using namespace std;
+
+int main() {
+    int n;
+    cout << "Enter a number: ";
+    cin >> n;
+
+    if (n == 0) {
+        cout << "Fibonacci number is: 0" << endl;
+        return 0;
+    }
+    if (n == 1) {
+        cout << "Fibonacci number is: 1" << endl;
+        return 0;
+    }
+
+    int a = 0;
+    int b = 1;
+    int c;
+
+    for (int i = 2; i <= n; i++) {
+        c = a + b;
+        a = b;
+        b = c;
+    }
+
+    cout << "Fibonacci number is: " << c << endl;
+
+    return 0;
+}
+
+
+
+
+
+#include <iostream>
+using namespace std;
+
+int fibonacci(int n) {
+    if (n == 0) {
+        return 0;
+    }
+    if (n == 1) {
+        return 1;
+    }
+    return fibonacci(n - 1) + fibonacci(n - 2);
+}
+
+int main() {
+    int n;
+    cout << "Enter a number: ";
+    cin >> n;
+
+    int ans = fibonacci(n);
+    cout << "Fibonacci number is: " << ans << endl;
+
+    return 0;
+}
+
+2-huffman-------------------------
+#include <iostream>
+#include <queue>
+using namespace std;
+
+class Node
+{
+public:
+    char ch;
+    int freq;
+    Node *left, *right;
+
+    Node(char c, int f)
+    {
+        ch = c;
+        freq = f;
+        left = NULL;
+        right = NULL;
+    }
+};
+
+class Compare
+{
+public:
+    bool operator()(Node *a, Node *b)
+    {
+        return a->freq > b->freq;
+    }
+};
+
+void printCode(Node *root, string code)
+{
+    if (root == NULL)
+        return;
+
+    if (root->left == NULL && root->right == NULL)
+    {
+        cout << root->ch << " : " << code << endl;
+        return;
+    }
+
+    printCode(root->left, code + "0");
+    printCode(root->right, code + "1");
+}
+
+int main()
+{
+    priority_queue<Node*, vector<Node*>, Compare> pq;
+
+    pq.push(new Node('A', 5));
+    pq.push(new Node('B', 9));
+    pq.push(new Node('C', 12));
+    pq.push(new Node('D', 13));
+    pq.push(new Node('E', 16));
+    pq.push(new Node('F', 45));
+
+    while (pq.size() > 1)
+    {
+        Node *left = pq.top();
+        pq.pop();
+
+        Node *right = pq.top();
+        pq.pop();
+
+        Node *parent = new Node('-', left->freq + right->freq);
+
+        parent->left = left;
+        parent->right = right;
+
+        pq.push(parent);
+    }
+
+    Node *root = pq.top();
+
+    cout << "Huffman:" << endl;
+    printCode(root, "");
+
+    return 0;
+}
+
+
+3 knapsack ------------------------------------------------------
+#include <iostream>
+using namespace std;
+
+int main() {
+    int n, W;
+
+    cout << "Enter number of items: ";
+    cin >> n;
+
+    int val[100];
+    int wt[100];
+
+    cout << "Enter values of items: ";
+    for (int i = 0; i < n; i++) {
+        cin >> val[i];
+    }
+
+    cout << "Enter weights of items: ";
+    for (int i = 0; i < n; i++) {
+        cin >> wt[i];
+    }
+
+    cout << "Enter knapsack capacity: ";
+    cin >> W;
+
+    int dp[101][101];
+
+    for (int i = 0; i <= n; i++) {
+        dp[i][0] = 0;
+    }
+    
+    for (int w = 0; w <= W; w++) {
+        dp[0][w] = 0;
+    }
+
+    for (int i = 1; i <= n; i++) {
+        for (int w = 1; w <= W; w++) {
+            if (wt[i - 1] <= w) {
+                int includeItem = val[i - 1] + dp[i - 1][w - wt[i - 1]];
+                int excludeItem = dp[i - 1][w];
+
+                if (includeItem > excludeItem) {
+                    dp[i][w] = includeItem;
+                } else {
+                    dp[i][w] = excludeItem;
+                }
+            } else {
+                dp[i][w] = dp[i - 1][w];
+            }
+        }
+    }
+
+    cout << "Maximum Profit = " << dp[n][W] << endl;
+
+    return 0;
+}
+
+4 nqueen -----------------------------------------------
+#include <bits/stdc++.h>
+using namespace std;
+
+bool isSafe(int **arr,int x,int y,int n){
+    for(int row = 0;row<x;row++){
+        if(arr[row][y]==1){
+            return false;
+        }
+    }
+    int row = x;
+    int col = y;
+    while(row >= 0 && col >=0){
+        if(arr[row][col]==1){
+            return false;
+        }
+        row--;
+        col--;
+    }
+    row = x;
+    col = y;
+    while(row >= 0 && col < n){
+        if(arr[row][col]==1){
+            return false;
+        }
+        row--;
+        col++;
+    }
+    return true;
+}
+
+bool nQueen(int** arr,int x,int n){
+    if(x>=n){
+        return true;
+    }
+    
+    for(int col = 0;col<n;col++){
+        if(isSafe(arr,x,col,n)){
+            arr[x][col] = 1;
+            if(nQueen(arr,x+1,n)){
+            return true;
+            }
+            arr[x][col] = 0;
+        }
+    }
+    return false;
+}
+
+int main() {
+	int n;
+	cin >>n;
+	int **arr = new int*[n];
+	for(int i=0;i<n;i++){
+        arr[i] = new int[n];
+        for(int j=0;j<n;j++){
+            arr[i][j]=0;
+        }
+    }
+    if(nQueen(arr,0,n)){
+        for(int i=0;i<n;i++){
+            for(int j=0;j<n;j++){
+                cout << arr[i][j] << " ";
+            }
+            cout << endl;
+        }
+    }else{
+        cout<<"not possible";
+    }
+    return 0;
+}
+
+
+5quicksort-----------------------------------
+#include <iostream>
+#include <cstdlib>
+#include <ctime>
+using namespace std;
+
+int partition(int arr[], int low, int high) {
+    int pivot = arr[high];
+    int i = low - 1;
+
+    for (int j = low; j < high; j++) {
+        if (arr[j] <= pivot) {
+            i++;
+            int temp = arr[i];
+            arr[i] = arr[j];
+            arr[j] = temp;
+        }
+    }
+
+    int temp = arr[i + 1];
+    arr[i + 1] = arr[high];
+    arr[high] = temp;
+
+    return i + 1;
+}
+
+void quickSort(int arr[], int low, int high) {
+
+    if (low < high) {
+
+        int randomIndex = low + rand() % (high - low + 1);
+
+        int temp = arr[randomIndex];
+        arr[randomIndex] = arr[high];
+        arr[high] = temp;
+
+        int p = partition(arr, low, high);
+
+        quickSort(arr, low, p - 1);
+        quickSort(arr, p + 1, high);
+    }
+}
+
+int main() {
+
+    srand(time(0));
+
+    int arr[] = {10, 7, 8, 9, 1, 5};
+    int n = 6;
+
+    quickSort(arr, 0, n - 1);
+
+    cout << "Sorted array: ";
+
+    for (int i = 0; i < n; i++) {
+        cout << arr[i] << " ";
+    }
+
+    return 0;
+}
