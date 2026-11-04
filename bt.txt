@@ -1,0 +1,262 @@
+LP3 BT PRACTICAL 13
+INSTALL METAMASK AND STUDY ETHER SPENDING PER TRANSACTION
+=========================================================
+
+AIM
+Install MetaMask and observe the gas used and transaction fee for an Ether transfer.
+
+PROCEDURE
+1. Open the official MetaMask site: https://metamask.io/
+2. Use the official download link to install the browser extension.
+3. Create a wallet and set a strong password.
+4. Write down the Secret Recovery Phrase offline and store it securely. Never share it or enter it into an unofficial website.
+5. Select an Ethereum test network (for example, Sepolia, if shown in MetaMask).
+6. Request test ETH from a trusted faucet for that network.
+7. Send a small amount of test ETH to another test address you control.
+8. Open the transaction details in the appropriate block explorer.
+9. Record the transaction hash, gas used, effective gas price, and transaction fee.
+
+FORMULA
+Transaction fee (ETH) = Gas used x Effective gas price (ETH per gas)
+If gas price is in Gwei:
+Fee (ETH) = Gas used x Gas price (Gwei) x 10^-9
+
+ILLUSTRATIVE CALCULATION
+Gas used = 21,000; gas price = 10 Gwei
+Fee = 21,000 x 10 x 10^-9 = 0.00021 ETH
+These are sample figures only. Actual gas used and gas price vary by transaction and network conditions.
+
+OBSERVATION TABLE
+Transaction hash: _______________________________
+Network: _______________________________________
+Amount transferred: _____________________________
+Gas used: ______________________________________
+Effective gas price: ____________________________
+Transaction fee: ________________________________
+
+RESULT
+MetaMask was used to send a test transaction and the transaction details were inspected to study gas and fees.
+
+VIVA
+- Ether (ETH): native cryptocurrency of Ethereum.
+- Gas: unit measuring computational work on Ethereum.
+- Gas price: amount paid per unit of gas.
+- Wallet address: public identifier used to receive assets.
+- Recovery phrase/private key: secret credentials; never share them.
+
+
+
+
+
+
+
+2---------------------------------------
+LP3 BT PRACTICAL 14
+CREATE A WALLET USING METAMASK FOR CRYPTO TRANSACTIONS
+======================================================
+
+AIM
+Create a MetaMask wallet and learn how to receive/send cryptocurrency safely.
+
+PROCEDURE
+1. Open https://metamask.io/ and install the official browser extension.
+2. Select Create a new wallet.
+3. Create a strong password.
+4. Back up the Secret Recovery Phrase offline in a private and safe place.
+5. Confirm the recovery phrase in the setup process.
+6. Open the wallet and copy the public wallet address to receive assets.
+7. Select the intended network. For exam practice, use a test network and test ETH.
+8. Receive test ETH from a trusted faucet or another test account.
+9. Use Send to transfer a small test amount to another test address.
+10. Inspect the transaction hash, status, gas used, and fee using the correct block explorer.
+
+OBSERVATIONS
+Wallet public address: ___________________________
+Network used: ___________________________________
+Transaction hash: _______________________________
+Transfer status: ________________________________
+Gas used / fee: _________________________________
+
+RESULT
+A MetaMask wallet was created and the basic receive/send transaction flow was studied.
+
+SECURITY
+The wallet address may be shared to receive funds. The private key and Secret Recovery Phrase must never be shared. Verify addresses carefully before sending assets.
+
+
+
+3-------------------------------------------------------------
+LP3 BT PRACTICAL 15
+BANK ACCOUNT SMART CONTRACT: DEPOSIT, WITHDRAW, SHOW BALANCE
+=============================================================
+
+AIM
+Implement deposit, withdrawal and balance display operations in Solidity.
+
+HOW TO RUN
+1. Open https://remix.ethereum.org/
+2. Create a new Solidity file named Bank.sol.
+3. Copy the code below into Bank.sol.
+4. Choose a Solidity 0.8.20-or-compatible 0.8.x compiler and compile.
+5. Deploy using Remix VM for a local demonstration.
+6. To deposit, choose a small Value (e.g. 1 ether or an amount in wei) and click deposit.
+7. Click showBalance. The returned amount is in wei.
+8. Enter an amount in wei into withdraw and execute it. Call showBalance again.
+
+SOLIDITY SOURCE (copy from below into Bank.sol)
+-----------------------------------------------
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract Bank {
+    mapping(address => uint256) private balances;
+
+    event Deposited(address indexed user, uint256 amount);
+    event Withdrawn(address indexed user, uint256 amount);
+
+    function deposit() public payable {
+        require(msg.value > 0, "Amount must be positive");
+        balances[msg.sender] += msg.value;
+        emit Deposited(msg.sender, msg.value);
+    }
+
+    function withdraw(uint256 amount) public {
+        require(amount > 0, "Amount must be positive");
+        require(balances[msg.sender] >= amount, "Insufficient balance");
+        balances[msg.sender] -= amount;
+        (bool success, ) = payable(msg.sender).call{value: amount}("");
+        require(success, "Transfer failed");
+        emit Withdrawn(msg.sender, amount);
+    }
+
+    function showBalance() public view returns (uint256) {
+        return balances[msg.sender];
+    }
+}
+
+IMPORTANT NOTES
+- deposit is payable so it can receive Ether.
+- msg.sender is the caller; msg.value is the amount sent, denominated in wei.
+- showBalance returns this caller's recorded balance in wei.
+- This is a teaching example, not a production banking contract.
+- A successful withdrawal reduces the caller's recorded balance and transfers Ether.
+
+VIVA
+mapping: key-value storage. payable: can receive Ether. require: checks a condition. view: does not change state. Event: logs an operation.
+
+RESULT
+The contract was compiled and deployed in the local Remix VM and deposit/withdraw/balance functions were tested.
+
+
+
+4------------------------------------------------------------
+LP3 BT PRACTICAL 16
+STUDENT DATA USING STRUCTURES, ARRAYS, RECEIVE AND FALLBACK
+===========================================================
+
+AIM
+Create student records using a struct and dynamic array; implement receive and fallback functions; observe gas information in Remix.
+
+HOW TO RUN
+1. Open https://remix.ethereum.org/ and create StudentData.sol.
+2. Copy the Solidity source below to StudentData.sol.
+3. Compile using a compatible Solidity 0.8.x compiler.
+4. Deploy using Remix VM.
+5. Call addStudent with rollNo=1, name="Omkar", marks=90.
+6. Call getStudent with index 0; call getCount to get the number of records.
+7. Test receive by sending Ether to the deployed contract with empty calldata.
+8. Test fallback by sending a transaction with unmatched calldata. Use Remix VM for safe testing.
+9. Select each transaction in Remix's terminal/details to inspect gas used and transaction cost information where available.
+
+SOLIDITY SOURCE (copy from below into StudentData.sol)
+-----------------------------------------------------
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract StudentData {
+    struct Student {
+        uint256 rollNo;
+        string name;
+        uint256 marks;
+    }
+
+    Student[] public students;
+    event EtherReceived(address indexed sender, uint256 amount, bool viaFallback);
+
+    function addStudent(uint256 rollNo, string memory name, uint256 marks) public {
+        students.push(Student(rollNo, name, marks));
+    }
+
+    function getStudent(uint256 index)
+        public view returns (uint256, string memory, uint256)
+    {
+        require(index < students.length, "Invalid index");
+        Student memory s = students[index];
+        return (s.rollNo, s.name, s.marks);
+    }
+
+    function getCount() public view returns (uint256) {
+        return students.length;
+    }
+
+    receive() external payable {
+        emit EtherReceived(msg.sender, msg.value, false);
+    }
+
+    fallback() external payable {
+        emit EtherReceived(msg.sender, msg.value, true);
+    }
+}
+
+VIVA
+- struct groups related fields into one record.
+- Student[] is a dynamic array of Student structures.
+- push appends a record.
+- receive() runs for plain Ether transfers with empty calldata.
+- fallback() can handle unmatched calls and can receive Ether when marked payable.
+- Gas is a measure of computation; transaction cost depends on gas used and gas price.
+
+OBSERVATION
+Deployment gas: _________________________________
+addStudent transaction gas: _____________________
+receive/fallback test gas: _______________________
+Transaction fee/cost displayed: __________________
+
+RESULT
+Student records and Ether-receiving functions were implemented and transaction gas information was observed in Remix VM. Local VM costs are for demonstration and are not mainnet fees.
+
+
+
+5---------------------------------------------------------------------
+LP3 BT PRACTICAL 17
+SURVEY: TYPES OF BLOCKCHAINS AND REAL-TIME USE CASES
+====================================================
+
+1. PUBLIC BLOCKCHAIN
+Open participation; data/transactions are generally visible according to the network design. Examples of use include public cryptocurrencies, decentralized applications and open smart contracts.
+
+2. PRIVATE BLOCKCHAIN
+Participation and permissions are controlled by one organization. Use cases can include internal audit records, enterprise workflow and controlled record management.
+
+3. CONSORTIUM / FEDERATED BLOCKCHAIN
+Governed by a group of selected organizations instead of one organization or the entire public. Use cases include multi-bank coordination, trade finance and supply-chain records shared among partners.
+
+4. HYBRID BLOCKCHAIN
+Combines private/permissioned data management with selected public verification or disclosure. Use cases can include controlled sharing of records with public proof of integrity.
+
+REAL-WORLD USE CASES
+- Supply chain: trace product origin and handoffs.
+- Healthcare: permissioned sharing/auditing of records.
+- Digital identity: verifiable credentials.
+- Finance: settlement, trade finance, tokenization and decentralized finance.
+- Smart contracts: automate rules when specified conditions are met.
+- Land/asset records: tamper-evident history when supported by reliable input processes.
+
+ADVANTAGES
+Shared audit trail, traceability, tamper-evidence, and automation through smart contracts.
+
+LIMITATIONS
+Privacy, scalability, transaction costs, governance, regulatory compliance, key management and incorrect off-chain data inputs need careful handling.
+
+CONCLUSION
+The suitable blockchain type depends on who needs to participate, who controls permissions, what data should be public, and the required performance and governance.
